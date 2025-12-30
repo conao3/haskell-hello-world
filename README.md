@@ -1,12 +1,17 @@
 # haskell-hello-world
 
-## Section1
+A hands-on introduction to Haskell fundamentals using GHCi (the Glasgow Haskell Compiler interactive environment).
 
-### hello-world
+## Getting Started
+
+This project uses Nix flakes for reproducible development environments.
 
 ```sh
-$ nix develop
-$ ghci
+nix develop
+ghci
+```
+
+```
 GHCi, version 9.8.4: https://www.haskell.org/ghc/  :? for help
 ghci> putStrLn "Hello, World"
 Hello, World
@@ -15,13 +20,11 @@ ghci> :quit
 Leaving GHCi.
 ```
 
-## Section2
+## Examples
 
-### Sample1
+### Working with Lists
 
-```python
-10 * 0 + 20 * 1 + 30 * 2 + 40 * 3 + 50 * 4
-```
+Calculate the weighted sum: `10 * 0 + 20 * 1 + 30 * 2 + 40 * 3 + 50 * 4`
 
 ```haskell
 ghci> [10,20,30,40,50]
@@ -36,9 +39,9 @@ ghci> ['a'..'h']
 ghci> zip [0..] [10,20,30,40,50]
 [(0,10),(1,20),(2,30),(3,40),(4,50)]
 
-ghci> let ret1 = zip [0..] [10,20,30,40,50]
-
 ghci> let mul (i,x) = x * i
+
+ghci> let ret1 = zip [0..] [10,20,30,40,50]
 
 ghci> map mul ret1
 [0,20,60,120,200]
@@ -46,14 +49,15 @@ ghci> map mul ret1
 ghci> let ret2 = map mul ret1
 ```
 
-- カリー化
-  - ただ、REPL上ではdisplayできなくてエラーになった。
-  - 変数に入れることで第1引数のみ部分適用した関数を束縛して利用できる。
+### Currying and Partial Application
+
+In Haskell, functions are curried by default. While you cannot display a partially applied function directly in GHCi, you can bind it to a variable and use it later:
+
 ```haskell
 ghci> map mul
 <interactive>:12:1: error: [GHC-39999]
-    • No instance for ‘Show ([(Integer, Integer)] -> [Integer])’
-        arising from a use of ‘print’
+    • No instance for 'Show ([(Integer, Integer)] -> [Integer])'
+        arising from a use of 'print'
         (maybe you haven't applied a function to enough arguments?)
     • In a stmt of an interactive GHCi command: print it
 
@@ -63,24 +67,24 @@ ghci> mul_map ret1
 [0,20,60,120,200]
 ```
 
-### Sample2
-reduce
+### Folding (Reduce)
 
-```python
-((((0 + 0) + 20) + 60) + 120) + 200
+Compute the sum: `((((0 + 0) + 20) + 60) + 120) + 200`
+
+The `(+)` syntax wraps the infix operator for prefix usage:
+
+```haskell
+ghci> :t (+)
+(+) :: Num a => a -> a -> a
+
+ghci> (+) 1 2
+3
+
+ghci> 1 + 2
+3
 ```
 
-- `(+)` は `+` が中置演算子のためにカッコで囲う必要がある
-  ```haskell
-  ghci> :t (+)
-  (+) :: Num a => a -> a -> a
-
-  ghci> (+) 1 2
-  3
-
-  ghci> 1 + 2
-  3
-  ```
+Using `foldl` to reduce a list:
 
 ```haskell
 ghci> :t foldl
@@ -90,20 +94,22 @@ ghci> foldl (+) 0 ret2
 400
 ```
 
-- `foldl :: Foldable t => (b -> a -> b) -> b -> t a -> b` の読み方
-  - `foldl ::`: 関数の名前
-  - `Foldable t =>`: `t` を `Foldable` とするよ
-  - `(b -> a -> b) ->`: 第1引数
-  - `b ->`: 第2引数
-  - `t a ->`: 第3引数
-  - `b`: 結果
+Understanding the type signature `foldl :: Foldable t => (b -> a -> b) -> b -> t a -> b`:
+- `Foldable t =>` - constraint that `t` must be a Foldable type
+- `(b -> a -> b)` - first argument: the combining function
+- `b` - second argument: the initial accumulator value
+- `t a` - third argument: the foldable structure
+- `b` - return type: the final accumulated result
 
-- `a` とか `b` とかは具体的な型はないが、第1引数の関数の型変数になっている。
+### Loading Haskell Files
 
-### Sample3
-`calc.hs` に保存したものを実行してみる
+Run `calc.hs` which implements the weighted sum calculation:
+
 ```sh
-$ ghci calc.hs
+ghci calc.hs
+```
+
+```
 GHCi, version 9.8.4: https://www.haskell.org/ghc/  :? for help
 [1 of 2] Compiling Main             ( calc.hs, interpreted )
 Ok, one module loaded.
@@ -111,8 +117,9 @@ ghci> calc [10,20,30,40,50]
 400
 ```
 
-### Sample4
-関数合成の演算子 `.`
+### Function Composition
+
+The `.` operator composes functions together:
 
 ```haskell
 ghci> let mul (i,x) = x * i
@@ -130,67 +137,72 @@ ghci> calc [10,20,30,40,50]
 400
 ```
 
-### Sample5
-`char.hs` として以下を保存する
+### Character and String Functions
+
+The `char.hs` file defines a simple digit checker:
+
 ```haskell
 isDigit :: Char -> Bool
 isDigit c = c >= '0' && c <= '9'
 ```
 
+```sh
+ghci char.hs
 ```
-$ ghci char.hs
-GHCi, version 9.8.4: https://www.haskell.org/ghc/  :? for help
-[1 of 2] Compiling Main             ( char.hs, interpreted )
-Ok, one module loaded.
+
+```
 ghci> isDigit '0'
 True
 ghci> isDigit 'a'
 False
 ```
 
-`string.hs` として以下を保存する
+The `string.hs` file demonstrates recursion with string building:
+
 ```haskell
 makeString :: Char -> Int -> [Char]
 makeString c 0 = []
 makeString c n = c : makeString c (n - 1)
 ```
 
+```sh
+ghci string.hs
 ```
-$ ghci string.hs
-GHCi, version 9.8.4: https://www.haskell.org/ghc/  :? for help
-[1 of 2] Compiling Main             ( string.hs, interpreted )
-Ok, one module loaded.
+
+```
 ghci> makeString 'w' 5
 "wwwww"
 ```
 
-## Section3
-### 最長重複文字列問題
+### Longest Repeated Substring
+
+Find the longest repeated substring in text. For example:
 
 ```
 Ask not what your country can do for you,
 but what you can do for your country.
 ```
 
--> 最長重複文字列は「can do for you」
+The longest repeated substring is " can do for you".
+
+```sh
+ghci -XNoMonomorphismRestriction maxDupStr.hs
+```
 
 ```
-$ ghci -XNoMonomorphismRestriction maxDupStr.hs
-GHCi, version 9.8.4: https://www.haskell.org/ghc/  :? for help
-[1 of 2] Compiling Main             ( maxDupStr.hs, interpreted )
-
-maxDupStr.hs:9:23: warning: [GHC-63394] [-Wx-partial]
-    In the use of ‘tail’
-    (imported from Data.List, but defined in GHC.List):
-    "This is a partial function, it throws an error on empty lists. Replace it with drop 1, or use pattern matching or Data.List.uncons instead. Consider refactoring to use Data.List.NonEmpty."
-  |
-9 | makePair xs = zip xs (tail xs)
-  |                       ^^^^
-Ok, one module loaded.
-ghci> maxDupStr "Ask not what your country can do for you,
-
-<interactive>:1:53: error: [GHC-21231]
-    lexical error in string/character literal at end of input
 ghci> maxDupStr "Ask not what your country can do for you, but what you can do for your country."
 " can do for you"
 ```
+
+## Development Tools
+
+The Nix flake provides:
+- GHC (Glasgow Haskell Compiler)
+- Cabal (build tool)
+- HLS (Haskell Language Server)
+- Ormolu (code formatter)
+- HLint (linter)
+
+## License
+
+See repository for license information.
